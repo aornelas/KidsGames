@@ -57,7 +57,6 @@ function startPlanets() {
 
 function launchPlanet(key) {
   // Only launch planet if this is the latest session
-  // TODO: Add start/reset button to avoid bitsbox rerun
   currentSession = key == sessionKey
   if (!launched && currentSession) {
     planetIndex = random(10) - 1
