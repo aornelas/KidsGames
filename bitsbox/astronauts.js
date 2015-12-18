@@ -18,6 +18,8 @@ driftOutSecs = 1
 launchSecs = 3
 planetBeatSecs = 4
 resultDelaySecs = 1.5
+sunSize = 30
+sunGrowth = 0.012
 
 planetStamps = [
   'mercury',
@@ -36,29 +38,29 @@ launched = false
 arrows = []
 foundPlanets = []
 score = 0
-results = text("")
+results = text('')
+sun = stamp('sun2',sunSize)
 planet = stamp('pluto5',-100,400,200)
 pod = stamp('saucer',saucerX,saucerY)
 scoreboard = text(score,700,990,80,'white')
+planetKey = random(9999999)
+sunKey = random(9999999)
+logOffset = 50
 
 repeat(createAstro,astroCount)
 delay(showArrows,driftOutSecs*1000)
 pod.back()
 updateScore()
-createSun()
+sun.back()
+startSun()
 delay(startPlanets,3000)
 
-// Workaround for delay function leak
-sessionKey = random(9999999)
-
 function startPlanets() {
-    launchPlanet(sessionKey)
+  launchPlanet(planetKey)
 }
 
 function launchPlanet(key) {
-  // Only launch planet if this is the latest session
-  currentSession = key == sessionKey
-  if (!launched && currentSession) {
+  if (!launched && key == planetKey) {
     planetIndex = random(10) - 1
     planetStamp = planetStamps[planetIndex]
     planetY = random(900)
@@ -69,13 +71,21 @@ function launchPlanet(key) {
   }
 }
 
-function createSun() {
-  sun = stamp('sun',30)
-  sun.back()
+function startSun() {
+  growSun(sunKey)
+}
+
+function growSun(key) {
+  if (sunSize < 30000 && key == sunKey) {
+    sun.back()
+    sunSize += sunSize*sunGrowth
+    sun.size(sunSize)
+    delay(function() { growSun(key) },40)
+  }
 }
 
 function createArrow() {
-  arrow = stamp('arrow3',205)
+  arrow = stamp('arrow3',-1000,-1000,205)
   arrow.hide()
   arrow.move()
   arrow.rotate()
@@ -154,10 +164,20 @@ function loop() {
   find('flyer').forEach(fly)
   saved = find('astro')
   drifting = find('drifter')
-  if (drifting.length == 0) {
+  if (!launched && sunSize > 4000) {
+    arrows.forEach(explode)
+    saved.forEach(explode)
+    drifting.forEach(explode)
+    pod.explode()
+    planet.explode()
+    planetKey = -1
+  } else if (drifting.length == 0) {
     pod.change('flying saucer')
     launch(pod)
     saved.forEach(launch)
+    sun.move(sun.x,sunSize*4,launchSecs*1000)
+    planet.move(planet.x,sunSize*4,launchSecs*1000)
+    sunKey = -1
     if (!launched) {
       printResults()
       sound('rocket',50)
@@ -187,3 +207,7 @@ function soundApplause() {
   sound('applause')
 }
 
+function log(msg) {
+  text(msg,50,logOffset,30,'white')
+  logOffset += 50
+}
