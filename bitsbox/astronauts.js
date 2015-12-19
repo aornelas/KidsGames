@@ -35,6 +35,7 @@ planetStamps = [
 ]
 
 launched = false
+burned = false
 arrows = []
 foundPlanets = []
 score = 0
@@ -53,7 +54,7 @@ pod.back()
 updateScore()
 sun.back()
 startSun()
-delay(startPlanets,3000)
+startPlanets()
 
 function startPlanets() {
   launchPlanet(planetKey)
@@ -106,7 +107,7 @@ function createAstro() {
 function thrust() {
   this.change('flyer')
   this.rotate(this.rotation)
-  sound('explosion')
+  sound('zap')
 }
 
 function launch(target) {
@@ -119,15 +120,14 @@ function fly(astronaut) {
   astronaut.move(UP,astroSpeed)
   if (astronaut.hits(planet)) {
     astronaut.explode()
-    sound('nuke',60)
+    sound('scream',60)
   }
   if (astronaut.hits(pod)) {
     score++
     updateScore()
     astronaut.rotate(0).change('astro')
-    sound('jump',30)
+    sound('whoohoo')
     if (launched) {
-      sound('whoohoo')
       printResults()
     }
   }
@@ -161,16 +161,23 @@ function printResults() {
 }
 
 function loop() {
-  find('flyer').forEach(fly)
+  if (burned) {
+    return
+  }
+  flyers = find('flyer')
   saved = find('astro')
   drifting = find('drifter')
+  flyers.forEach(fly)
   if (!launched && sunSize > 4000) {
+    sound('atom')
     arrows.forEach(explode)
     saved.forEach(explode)
     drifting.forEach(explode)
+    flyers.forEach(explode)
     pod.explode()
     planet.explode()
     planetKey = -1
+    burned = true
   } else if (drifting.length == 0) {
     pod.change('flying saucer')
     launch(pod)
