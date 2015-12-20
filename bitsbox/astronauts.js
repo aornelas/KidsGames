@@ -56,6 +56,82 @@ sun.back()
 startSun()
 startPlanets()
 
+// Thermometer values
+heatingKey = random(9999999)
+coolingKey = random(9999999)
+lineWidth = 4
+circleMax = 25
+circleRadius = 1
+circleRadiusCooling = 1
+circleX = 60
+circleY = 980
+boxMax = 220
+boxHeight = 10
+boxHeightCooling = 1
+boxX = 50
+boxY = 780
+boxWidth = 16
+
+// Draw thermometer
+line(lineWidth)
+box(boxX,boxY,boxWidth+lineWidth,boxMax+lineWidth,'light gray','light gray')
+circle(circleX,circleY,circleMax+lineWidth-1,'light gray','light gray')
+fire = stamp('dragon fire',60,735,100)
+
+startHeating()
+
+function startHeating() {
+  heatUp(heatingKey)
+}
+
+function heatUp(key) {
+  if (key != heatingKey) {
+    return
+  }
+  if (circleRadius < circleMax) {
+    circle(circleX,circleY,circleRadius,'red')
+    circleRadius += 0.5
+    delay(function() { heatUp(key) },50)
+  } else if (boxHeight > (boxMax-circleMax-22)*-1) {
+    box(boxX+lineWidth,circleY-circleMax,boxWidth-lineWidth,boxHeight,'red')
+    boxHeight -= 0.5
+    if (boxHeight == -100) {
+      fire.dance()
+      sound('warning')
+    }
+    if (boxHeight == -150) {
+      fire.dance()
+      sound('alert')
+    }
+    delay(function() { heatUp(key) },50)
+  } else {
+    burn()
+  }
+}
+
+function startCooling() {
+  heatingKey = -1
+  circleRadiusCooling = circleRadius + 2
+  coolDown(coolingKey)
+}
+
+function coolDown(key) {
+  if (key != coolingKey) {
+    return
+  }
+  if (boxHeightCooling < boxHeight * -1) {
+    boxYCooling = circleY-circleMax+boxHeight
+    box(boxX+lineWidth,boxYCooling,boxWidth-lineWidth,boxHeightCooling,'light gray')
+    boxHeightCooling += 2.5
+    delay(function() { coolDown(key) },50)
+  } else if (circleRadiusCooling > 0) {
+    line(1)
+    circle(circleX,circleY,circleRadiusCooling,'clear','light gray')
+    circleRadiusCooling -= 0.25
+    delay(function() { coolDown(key) },15)
+  }
+}
+
 function startPlanets() {
   launchPlanet(planetKey)
 }
@@ -64,7 +140,7 @@ function launchPlanet(key) {
   if (!launched && key == planetKey) {
     planetIndex = random(10) - 1
     planetStamp = planetStamps[planetIndex]
-    planetY = random(900)
+    planetY = random(670)
     planet = stamp(planetStamp,-100,planetY,165+random(65))
     planet.rotate((random(100)+50)*360,rotationSecs*1000)
     planet.move(1000,planetY,5000)
@@ -88,7 +164,7 @@ function growSun(key) {
 function createArrow() {
   arrow = stamp('arrow3',-1000,-1000,205)
   arrow.hide()
-  arrow.move()
+  arrow.move(random(750),random(670))
   arrow.rotate()
   arrow.rotate(rotationRevs*360,rotationSecs*1000)
   arrows.push(arrow)
@@ -120,7 +196,7 @@ function fly(astronaut) {
   astronaut.move(UP,astroSpeed)
   if (astronaut.hits(planet)) {
     astronaut.explode()
-    sound('scream',60)
+    sound('boom',60)
   }
   if (astronaut.hits(pod)) {
     score++
@@ -160,16 +236,9 @@ function printResults() {
   results = text(message,messageX,990,'white')
 }
 
-function loop() {
-  if (burned) {
-    return
-  }
-  flyers = find('flyer')
-  saved = find('astro')
-  drifting = find('drifter')
-  flyers.forEach(fly)
-  if (!launched && sunSize > 4000) {
-    sound('atom')
+function burn() {
+  if (!launched) {
+    sound('thunder2')
     arrows.forEach(explode)
     saved.forEach(explode)
     drifting.forEach(explode)
@@ -178,17 +247,34 @@ function loop() {
     planet.explode()
     planetKey = -1
     burned = true
-  } else if (drifting.length == 0) {
+    printResults()
+  }
+}
+
+function loop() {
+  if (burned) {
+    return
+  }
+  flyers = find('flyer')
+  saved = find('astro')
+  drifting = find('drifter')
+  flyers.forEach(fly)
+  if (drifting.length == 0) {
     pod.change('flying saucer')
     launch(pod)
     saved.forEach(launch)
-    sun.move(sun.x,sunSize*4,launchSecs*1000)
-    planet.move(planet.x,sunSize*4,launchSecs*1000)
+    sunTarget = sunSize*3
+    if (sunTarget < 2000) {
+      sunTarget = 2000
+    }
+    sun.move(sun.x,sunTarget,launchSecs*1000)
+    planet.move(planet.x,sunTarget,launchSecs*1000)
     sunKey = -1
     if (!launched) {
       printResults()
       sound('rocket',50)
       launched = true
+      startCooling()
     }
   }
 }
