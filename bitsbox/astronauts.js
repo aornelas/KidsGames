@@ -6,8 +6,7 @@
  * based on bitsbox activity "Escape Pod" (2902)
  */
 
-fill('stars2')
-
+// Configuration constants
 saucerX = 350
 saucerY = 900
 astroCount = 5
@@ -15,11 +14,43 @@ astroSpeed = 20
 rotationRevs = 100
 rotationSecs = 400
 driftOutSecs = 1
-launchSecs = 3
+launchSecs = 2
 planetBeatSecs = 4
 resultDelaySecs = 1.5
-sunSize = 30
 sunGrowth = 0.012
+lineWidth = 4
+circleMax = 25
+circleX = 60
+circleY = 980
+boxMax = 220
+boxX = 50
+boxY = 780
+boxWidth = 16
+logOffset = 50
+
+// State variables
+started = undefined
+startButton = undefined
+launched = undefined
+burned = undefined
+arrows = undefined
+foundPlanets = undefined
+score = undefined
+results = undefined
+sun = undefined
+sunSize = undefined
+planet = undefined
+pod = undefined
+scoreboard = undefined
+planetKey = undefined
+sunKey = undefined
+fire = undefined
+heatingKey = undefined
+coolingKey = undefined
+circleRadius = undefined
+circleRadiusCooling = undefined
+boxHeight = undefined
+boxHeightCooling = undefined
 
 planetStamps = [
   'mercury',
@@ -34,51 +65,66 @@ planetStamps = [
   'pluto6'
 ]
 
-launched = false
-burned = false
-arrows = []
-foundPlanets = []
-score = 0
-results = text('')
-sun = stamp('sun2',sunSize)
-planet = stamp('pluto5',-100,400,200)
-pod = stamp('saucer',saucerX,saucerY)
-scoreboard = text(score,700,990,80,'white')
-planetKey = random(9999999)
-sunKey = random(9999999)
-logOffset = 50
+startButton = stamp('alarm')
+startButton.tap = resetGame
 
-repeat(createAstro,astroCount)
-delay(showArrows,driftOutSecs*1000)
-pod.back()
-updateScore()
-sun.back()
-startSun()
-startPlanets()
+function resetObject(obj) {
+  if (obj != undefined) {
+    obj.hide()
+  }
+}
 
-// Thermometer values
-heatingKey = random(9999999)
-coolingKey = random(9999999)
-lineWidth = 4
-circleMax = 25
-circleRadius = 1
-circleRadiusCooling = 1
-circleX = 60
-circleY = 980
-boxMax = 220
-boxHeight = 10
-boxHeightCooling = 1
-boxX = 50
-boxY = 780
-boxWidth = 16
+function resetValues() {
+  resetObject(results)
+  resetObject(sun)
+  resetObject(pod)
+  resetObject(fire)
+  launched = false
+  burned = false
+  arrows = []
+  foundPlanets = []
+  score = 0
+  sunSize = 30
+  results = text('')
+  sun = stamp('sun2',sunSize)
+  planet = stamp('pluto5',-100,400,200)
+  pod = stamp('saucer',saucerX,saucerY)
+  scoreboard = text(score,700,990,80,'white')
+  planetKey = random(9999999)
+  sunKey = random(9999999)
+  // Thermometer values
+  fire = stamp('dragon fire',60,735,100)
+  heatingKey = random(9999999)
+  coolingKey = random(9999999)
+  circleRadius = 1
+  circleRadiusCooling = 1
+  boxHeight = 10
+  boxHeightCooling = 1
+  started = true
+}
 
-// Draw thermometer
-line(lineWidth)
-box(boxX,boxY,boxWidth+lineWidth,boxMax+lineWidth,'light gray','light gray')
-circle(circleX,circleY,circleMax+lineWidth-1,'light gray','light gray')
-fire = stamp('dragon fire',60,735,100)
+fill('stars2')
 
-startHeating()
+function resetGame() {
+  startButton.hide()
+  resetValues()
+  repeat(createAstro,astroCount)
+  delay(showArrows,driftOutSecs*1000)
+  drawThermometer()
+  fire.front()
+  pod.back()
+  updateScore()
+  sun.back()
+  startSun()
+  startPlanets()
+}
+
+function drawThermometer() {
+  line(lineWidth)
+  box(boxX,boxY,boxWidth+lineWidth,boxMax+lineWidth,'light gray','light gray')
+  circle(circleX,circleY,circleMax+lineWidth-1,'light gray','light gray')
+  startHeating()
+}
 
 function startHeating() {
   heatUp(heatingKey)
@@ -237,6 +283,11 @@ function printResults() {
     delay(soundApplause,resultDelaySecs)
   }
   results = text(message,messageX,990,'white')
+  delay(showStartButton,3000)
+}
+
+function showStartButton() {
+  startButton.show()
 }
 
 function burnAll() {
@@ -256,7 +307,7 @@ function burnAll() {
 }
 
 function loop() {
-  if (burned) {
+  if (!started || burned) {
     return
   }
   flyers = find('flyer')
