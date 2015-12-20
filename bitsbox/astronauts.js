@@ -13,7 +13,7 @@ saucerY = 900
 astroCount = 5
 astroSpeed = 20
 rotationRevs = 100
-rotationSecs = 500
+rotationSecs = 400
 driftOutSecs = 1
 launchSecs = 3
 planetBeatSecs = 4
@@ -217,7 +217,10 @@ function printResults() {
   results.hide()
   scoreboard.hide()
   messageX = 160
-  if (score == 0) {
+  if (burned) {
+    message = '¡el sol los quemó!'
+    messageX += 80
+  } else if (score == 0) {
     message = 'nadie alcanzó'
     messageX += 110
     delay(soundToilet,resultDelaySecs)
@@ -238,6 +241,7 @@ function printResults() {
 
 function burnAll() {
   if (!launched) {
+    burned = true
     sound('thunder2')
     arrows.forEach(burn)
     saved.forEach(burn)
@@ -247,7 +251,6 @@ function burnAll() {
     planet.burn()
     fire.burn()
     planetKey = -1
-    burned = true
     printResults()
   }
 }
