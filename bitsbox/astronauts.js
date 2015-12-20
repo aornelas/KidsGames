@@ -95,7 +95,7 @@ function heatUp(key) {
   } else if (boxHeight > (boxMax-circleMax-22)*-1) {
     box(boxX+lineWidth,circleY-circleMax,boxWidth-lineWidth,boxHeight,'red')
     boxHeight -= 0.5
-    if (boxHeight == -100) {
+    if (boxHeight == -100 || boxHeight == -125) {
       fire.dance()
       sound('warning')
     }
@@ -105,7 +105,7 @@ function heatUp(key) {
     }
     delay(function() { heatUp(key) },50)
   } else {
-    burn()
+    burnAll()
   }
 }
 
@@ -236,15 +236,16 @@ function printResults() {
   results = text(message,messageX,990,'white')
 }
 
-function burn() {
+function burnAll() {
   if (!launched) {
     sound('thunder2')
-    arrows.forEach(explode)
-    saved.forEach(explode)
-    drifting.forEach(explode)
-    flyers.forEach(explode)
-    pod.explode()
-    planet.explode()
+    arrows.forEach(burn)
+    saved.forEach(burn)
+    drifting.forEach(burn)
+    flyers.forEach(burn)
+    pod.burn()
+    planet.burn()
+    fire.burn()
     planetKey = -1
     burned = true
     printResults()
