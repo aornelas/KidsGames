@@ -7,6 +7,10 @@
  */
 
 // Configuration constants
+pickerSize = 300
+optionsY = 750
+planetX = 250
+sunX = 550
 saucerX = 350
 saucerY = 900
 astroCount = 5
@@ -28,7 +32,11 @@ boxY = 780
 boxWidth = 16
 logOffset = 50
 
-// State variables
+// Game options
+planetOn = true
+sunOn = true
+
+// Game state variables
 started = undefined
 startButton = undefined
 launched = undefined
@@ -65,8 +73,50 @@ planetStamps = [
   'pluto6'
 ]
 
-startButton = stamp('alarm')
+startButton = stamp('alarm',390,380)
 startButton.tap = resetGame
+planetSelected = stamp('target',planetX,optionsY,pickerSize)
+sunSelected = stamp('target',sunX,optionsY,pickerSize)
+planetPicker = stamp('pluto6',planetX,optionsY,220)
+planetPicker.tap = togglePlanet
+sunPicker = stamp('sun2',sunX,optionsY)
+sunPicker.tap = toggleSun
+
+function togglePlanet() {
+  if (planetOn) {
+    planetSelected.hide()
+  } else {
+    planetSelected.show()
+  }
+  planetOn = !planetOn
+}
+
+function toggleSun() {
+  if (sunOn) {
+    sunSelected.hide()
+  } else {
+    sunSelected.show()
+  }
+  sunOn = !sunOn
+}
+
+function showPlanetPicker() {
+  planetPicker.show()
+  if (planetOn) {
+    planetSelected.show()
+  } else {
+    planetSelected.hide()
+  }
+}
+
+function showSunPicker() {
+  sunPicker.show()
+  if (sunOn) {
+    sunSelected.show()
+  } else {
+    sunSelected.hide()
+  }
+}
 
 function resetObject(obj) {
   if (obj != undefined) {
@@ -87,13 +137,21 @@ function resetValues() {
   sunSize = 30
   results = text('')
   sun = stamp('sun2',sunSize)
-  planet = stamp('pluto5',-100,400,200)
+  if (!sunOn) {
+    sun.hide()
+  }
+  planet = stamp('pluto5',-1000,400,200)
   pod = stamp('saucer',saucerX,saucerY)
   scoreboard = text(score,700,990,80,'white')
   planetKey = random(9999999)
   sunKey = random(9999999)
   // Thermometer values
-  fire = stamp('dragon fire',60,735,100)
+  fire = stamp('dragon fire',-1000,735,100)
+  if (!sunOn) {
+    fire.hide()
+  } else {
+    fire.move(60,735)
+  }
   heatingKey = random(9999999)
   coolingKey = random(9999999)
   circleRadius = 1
@@ -107,6 +165,10 @@ fill('stars2')
 
 function resetGame() {
   startButton.hide()
+  planetPicker.hide()
+  planetSelected.hide()
+  sunPicker.hide()
+  sunSelected.hide()
   resetValues()
   repeat(createAstro,astroCount)
   delay(showArrows,driftOutSecs*1000)
@@ -115,11 +177,18 @@ function resetGame() {
   pod.back()
   updateScore()
   sun.back()
-  startSun()
-  startPlanets()
+  if (sunOn) {
+    startSun()
+  }
+  if (planetOn) {
+    startPlanets()
+  }
 }
 
 function drawThermometer() {
+  if (!sunOn) {
+    return
+  }
   line(lineWidth)
   box(boxX,boxY,boxWidth+lineWidth,boxMax+lineWidth,'light gray','light gray')
   circle(circleX,circleY,circleMax+lineWidth-1,'light gray','light gray')
@@ -272,10 +341,10 @@ function printResults() {
     delay(soundToilet,resultDelaySecs)
   } else if (score == 1) {
     message = '¡salvaste a 1 astronauta!'
-    messageX += 40
+    messageX += 15
   } else if (score > 1 && score < astroCount) {
     message = '¡salvaste a ' + score + ' astronautas!'
-    messageX += 35
+    messageX += 15
     delay(soundClaps,resultDelaySecs)
   } else {
     message = '¡salvaste a TODOS los astronautas!'
@@ -283,11 +352,13 @@ function printResults() {
     delay(soundApplause,resultDelaySecs)
   }
   results = text(message,messageX,990,'white')
-  delay(showStartButton,3000)
+  delay(showStartMenu,3000)
 }
 
-function showStartButton() {
+function showStartMenu() {
   startButton.show()
+  showPlanetPicker()
+  showSunPicker()
 }
 
 function burnAll() {
